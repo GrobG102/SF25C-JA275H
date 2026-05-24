@@ -252,7 +252,7 @@
           data.members.forEach(m => { memberCategoryMap[m.name] = m.category; memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); });
 
           const categorySelect = document.getElementById('payer-category');
-          data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option> });
+          data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
 
           const purposeList = document.getElementById('purpose-list');
           data.purposes.forEach(p => { purposeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
