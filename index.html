@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <title>フライトログ</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  
+  <style>
+    body { font-family: sans-serif; font-size: 22px; padding: 15px; background-color: #f9f9f9; color: #333; }
+    h2 { font-size: 24px; border-bottom: 3px solid #00B900; padding-bottom: 5px; margin-top: 10px; }
+    label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; font-size: 20px; color: #555; }
+    input, select, button { font-size: 22px; padding: 12px; width: 100%; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; background-color: #fff; transition: background-color 0.3s; }
+    
+    .required::after { content: " *"; color: #ef5350; font-weight: bold; font-size: 20px; }
+    .sub-label { font-size: 14px; color: #777; font-weight: normal; }
+    .empty-required { background-color: #ffebee !important; border: 2px solid #ef5350 !important; }
+    
+    .flex-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+    .flex-row > * { margin-bottom: 0; margin-top: 0; }
+    .half-input { flex-grow: 1; width: 40%; min-width: 0; }
+    .icon-btn { font-size: 28px; padding: 10px; flex-shrink: 0; width: auto; background: #e0e0e0; border: none; cursor: pointer; }
+    
+    .label-with-btn { display: flex; justify-content: space-between; align-items: baseline; }
+    .lcl-btn { font-size: 16px; padding: 6px 12px; width: auto; background-color: #2196F3; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+    .wt-container { display: flex; align-items: center; gap: 15px; }
+    .wt-btn { font-size: 24px; width: 60px; background-color: #ddd; border: none; }
+    .wt-display { font-size: 24px; font-weight: bold; width: 50px; text-align: center; }
+    
+    .highlight-box { background-color: #e8f5e9; border: 2px solid #4caf50; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; font-weight: bold; }
+    .btn-submit { background-color: #00B900; color: white; border: none; font-weight: bold; margin-top: 30px; }
+    .btn-submit:disabled { background-color: #9e9e9e; cursor: not-allowed; }
+    
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 20px; }
+    .btn-blue { background-color: #2196F3; color: white; border: none; font-weight: bold; margin-top: 20px; }
+    .hidden { display: none !important; }
+    .alert-text { color: #ef5350; font-size: 16px; font-weight: bold; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+  <div id="loading-view"><h2>システム確認中...</h2></div>
+
+  <div id="login-view" class="card hidden">
+    <h2>ブラウザ版 ログイン</h2>
+    <p style="font-size: 16px; color: #666;">PCや通常のブラウザからご利用の場合は、お名前と共通パスワードを入力してください。</p>
+    <div style="background-color: #fff3e0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+      <span style="font-size: 14px; color: #e65100; font-weight: bold;">※クラブ未登録の方へ</span><br>
+      <span style="font-size: 14px; color: #333;">初回は必ずスマートフォンの「LINE公式アカウント」から利用申請を行ってください。</span>
+    </div>
+    <label class="required">本名（スペースなし）</label>
+    <input type="text" id="login-name" class="req-check" placeholder="例：山田太郎">
+    <label class="required">共通パスワード</label>
+    <input type="password" id="login-pass" class="req-check" placeholder="クラブ共通パスワード">
+    <button type="button" id="login-btn" class="btn-blue">ログインする</button>
+  </div>
+
+  <div id="request-view" class="card hidden">
+    <h2>クラブ利用申請</h2>
+    <p style="font-size: 16px; color: #ef5350; font-weight: bold;">このLINEアカウントはまだ登録されていません。最初に利用申請を行ってください。</p>
+    <label class="required">本名（スペースなし）</label>
+    <input type="text" id="req-name" class="req-check" placeholder="例：山田太郎">
+    <div class="alert-text">※名字と名前の間のスペースは入れないでください。</div>
+    <label class="required">搭乗者区分</label>
+    <select id="req-category" class="req-check"><option value="">選択してください</option></select>
+    <button type="button" id="req-btn" class="btn-submit">利用申請をする</button>
+  </div>
+
+  <div id="pending-view" class="card hidden" style="text-align: center;">
+    <h2 style="border-bottom: 3px solid #ff9800;">利用申請中</h2>
+    <p style="font-weight: bold; margin-top: 20px;">現在、管理者の承認待ちです。</p>
+    <p style="font-size: 18px; color: #666;">承認が完了すると、自動的にフライトログ入力画面に切り替わります。しばらくお待ちください。</p>
+  </div>
+
+  <div id="main-form-view" class="hidden">
+    <h2>フライトログ入力</h2>
+    <p id="user-welcome" style="font-size: 16px; color: #00B900; font-weight: bold; text-align: right; margin: 0;"></p>
+    
+    <label class="required">飛行日</label><input type="date" id="flight-date" class="req-check">
+
+    <label class="required">左席 / 右席 <span class="sub-label">(どちらか一方でOK)</span></label>
+    <div class="flex-row">
+      <input list="member-list" id="left-seat" class="half-input seat-check" placeholder="左席">
+      <button type="button" id="swap-btn" class="icon-btn">🔄</button>
+      <input list="member-list" id="right-seat" class="half-input seat-check" placeholder="右席">
+    </div>
+
+    <label class="required">飛行目的</label>
+    <input list="purpose-list" id="purpose" class="req-check" placeholder="名前を入力または選択">
+    <datalist id="purpose-list"></datalist>
+
+    <div class="label-with-btn">
+      <label class="required">出発地 / 到着地</label>
+      <button type="button" id="lcl-btn" class="lcl-btn">LCL (同地)</button>
+    </div>
+    <div class="flex-row">
+      <input list="place-list" id="departure" class="half-input req-check" placeholder="出発地">
+      <span style="font-weight:bold;">→</span>
+      <input list="place-list" id="arrival" class="half-input req-check" placeholder="到着地">
+    </div>
+    <datalist id="place-list"></datalist>
+
+    <label class="required">発進時刻 / 停止時刻</label>
+    <div class="flex-row">
+      <input type="time" id="start-time" class="half-input req-check">
+      <span style="font-weight:bold;">〜</span>
+      <input type="time" id="stop-time" class="half-input req-check">
+    </div>
+
+    <div class="highlight-box">飛行時間： <span id="flight-time-display">0時間0分</span></div>
+
+    <label class="required">WT回数</label>
+    <div class="wt-container">
+      <button type="button" id="wt-minus" class="wt-btn">－</button>
+      <div id="wt-display" class="wt-display">0</div>
+      <button type="button" id="wt-plus" class="wt-btn" style="background-color: #ff9800; color: white;">＋</button>
+    </div>
+
+    <label class="required">機長名 (PIC)</label><input list="member-list" id="pic" class="req-check" placeholder="名前を入力">
+    <label class="required">振込予定者</label><input list="member-list" id="payer" class="req-check" placeholder="名前を入力">
+    <label class="required">搭乗者区分</label><select id="payer-category" class="req-check"><option value="">選択してください</option></select>
+    
+    <label>備考 <span class="sub-label">(空欄でもOK)</span></label><input type="text" id="memo" placeholder="特記事項">
+    
+    <label class="required">フライト料金（円）</label>
+    <input type="number" id="amount-input" class="req-check" placeholder="金額" style="font-weight: bold; color: #e65100; border: 2px solid #ff9800;">
+
+    <button type="button" id="submit-btn" class="btn-submit">ログを送信する</button>
+  </div>
+  <datalist id="member-list"></datalist>
+
+  <script>
+    // ▼▼▼ 【最重要】ここにあなたの設定値を直接貼り付けてください ▼▼▼
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwrutfuWNIXWhtQXOxgG9EpQn0iRhITd2XstmEMxiuxydjA8K8PfKBM88Q_brPwXxe6BA/exec";
+    const LIFF_ID = "2010179174-Zw9WEeTM";
+    // ▲▲▲ 【最重要】ここまで ▲▲▲
+
+    let wtCount = 0, priceMaster = {}, memberCategoryMap = {}, totalMinutes = 0, flightTimeString = "0:00"; 
+    let loginUserName = "", loginUserCategory = "", lineProfile = { userId: "", displayName: "" };
+
+    // 作戦B：厨房(GAS)へ注文を送るための世界標準の通信関数
+    function callGas(action, extraParams = {}) {
+      const payload = { action: action, ...extraParams };
+      return fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("通信エラーが発生しました");
+        return res.json();
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById('flight-date').valueAsDate = new Date();
+      
+      const sanitizeSpace = function(e) { this.value = this.value.replace(/[\s ]/g, ''); };
+      document.getElementById('login-name').addEventListener('input', sanitizeSpace);
+      document.getElementById('req-name').addEventListener('input', sanitizeSpace);
+
+      function updateValidationColors() {
+        document.querySelectorAll('.req-check').forEach(el => {
+          if (!el.value) el.classList.add('empty-required');
+          else el.classList.remove('empty-required');
+        });
+        const left = document.getElementById('left-seat'), right = document.getElementById('right-seat');
+        if (!left.value && !right.value) { left.classList.add('empty-required'); right.classList.add('empty-required'); } 
+        else { left.classList.remove('empty-required'); right.classList.remove('empty-required'); }
+      }
+
+      document.body.addEventListener('input', (e) => {
+        if (e.target.classList.contains('req-check') || e.target.classList.contains('seat-check')) {
+          updateValidationColors();
+        }
+      });
+
+      // LINE(LIFF)初期化処理
+      liff.init({ liffId: LIFF_ID.trim() }).then(() => {
+        if (liff.isInClient()) {
+          liff.getProfile().then(profile => {
+            lineProfile.userId = profile.userId;
+            lineProfile.displayName = profile.displayName;
+            
+            // google.script.runの代わりに、インターネット経由でGASへ注文
+            callGas('checkAuth', { lineUserId: profile.userId })
+              .then((authRes) => {
+                if (authRes.status === 'allowed') {
+                  loginUserName = authRes.name;
+                  loginUserCategory = authRes.category;
+                  initMainForm();
+                } else if (authRes.status === 'pending') {
+                  showView('pending-view');
+                } else {
+                  callGas('getMasterData').then((master) => {
+                    const reqSelect = document.getElementById('req-category');
+                    master.categories.forEach(cat => {
+                      reqSelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`);
+                    });
+                    showView('request-view');
+                    updateValidationColors();
+                  });
+                }
+              })
+              .catch(() => { showView('login-view'); updateValidationColors(); });
+          }).catch(() => { showView('login-view'); updateValidationColors(); });
+        } else {
+          showView('login-view');
+          updateValidationColors();
+        }
+      }).catch(() => {
+        showView('login-view');
+        updateValidationColors();
+      });
+
+      document.getElementById('login-btn').addEventListener('click', () => {
+        const name = document.getElementById('login-name').value;
+        const pass = document.getElementById('login-pass').value;
+        if(!name || !pass) { updateValidationColors(); return alert("お名前とパスワードを入力してください。"); }
+        
+        document.getElementById('login-btn').disabled = true;
+        callGas('loginWithPassword', { name: name, password: pass })
+          .then((res) => {
+            if(res.success) {
+              loginUserName = res.name; loginUserCategory = res.category; initMainForm();
+            } else {
+              alert(res.error); document.getElementById('login-btn').disabled = false;
+            }
+          })
+          .catch(err => { alert("通信に失敗しました"); document.getElementById('login-btn').disabled = false; });
+      });
+
+      document.getElementById('req-btn').addEventListener('click', () => {
+        const name = document.getElementById('req-name').value;
+        const cat = document.getElementById('req-category').value;
+        if(!name || !cat) { updateValidationColors(); return alert("お名前と区分を選択してください。"); }
+        
+        document.getElementById('req-btn').disabled = true;
+        const reqData = { name: name, category: cat, lineName: lineProfile.displayName, lineUserId: lineProfile.userId };
+        callGas('submitApplication', { data: reqData })
+          .then((res) => {
+            if(res.success) { showView('pending-view'); } 
+            else { alert(res.error); document.getElementById('req-btn').disabled = false; }
+          })
+          .catch(() => { alert("申請通信に失敗しました"); document.getElementById('req-btn').disabled = false; });
+      });
+
+      function initMainForm() {
+        callGas('getMasterData').then(function(data) {
+          priceMaster = data.prices;
+          const memberList = document.getElementById('member-list');
+          data.members.forEach(m => { memberCategoryMap[m.name] = m.category; memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); });
+
+          const categorySelect = document.getElementById('payer-category');
+          data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option> });
+
+          const purposeList = document.getElementById('purpose-list');
+          data.purposes.forEach(p => { purposeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
+
+          const placeList = document.getElementById('place-list');
+          data.places.forEach(p => { placeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
+
+          if (data.lastArrival) { document.getElementById('departure').value = data.lastArrival; }
+          if (loginUserName) {
+            document.getElementById('left-seat').value = loginUserName;
+            document.getElementById('pic').value = loginUserName;
+            document.getElementById('payer').value = loginUserName;
+            if (loginUserCategory) { document.getElementById('payer-category').value = loginUserCategory; }
+          }
+          document.getElementById('user-welcome').innerText = `ログイン中: ${loginUserName} さん`;
+          showView('main-form-view');
+          updateValidationColors();
+        }).catch(() => alert("初期データの取得に失敗しました"));
+      }
+
+      function showView(viewId) {
+        document.querySelectorAll('.card, #main-form-view, #loading-view').forEach(el => el.classList.add('hidden'));
+        document.getElementById(viewId).classList.remove('hidden');
+      }
+
+      document.getElementById('swap-btn').addEventListener('click', () => {
+        const left = document.getElementById('left-seat'), right = document.getElementById('right-seat');
+        const temp = left.value; left.value = right.value; right.value = temp; updateValidationColors();
+      });
+
+      document.getElementById('lcl-btn').addEventListener('click', () => {
+        const dep = document.getElementById('departure').value;
+        if (dep) { document.getElementById('arrival').value = dep; updateValidationColors(); }
+      });
+
+      document.getElementById('payer').addEventListener('input', (e) => {
+        if (memberCategoryMap[e.target.value]) { document.getElementById('payer-category').value = memberCategoryMap[e.target.value]; }
+        calcPrice();
+      });
+      document.getElementById('payer-category').addEventListener('change', calcPrice);
+
+      const calcTime = () => {
+        const start = document.getElementById('start-time').value, stop = document.getElementById('stop-time').value;
+        if(start && stop) {
+          const startTime = new Date(`1970-01-01T${start}:00`);
+          let stopTime = new Date(`1970-01-01T${stop}:00`);
+          if(stopTime < startTime) stopTime.setDate(stopTime.getDate() + 1);
+          
+          totalMinutes = Math.floor((stopTime - startTime) / (1000 * 60));
+          const h = Math.floor(totalMinutes / 60), m = totalMinutes % 60;
+          document.getElementById('flight-time-display').innerText = `${h}時間${m}分`;
+          flightTimeString = `${h}:${m.toString().padStart(2, '0')}`;
+          calcPrice();
+        }
+      };
+      document.getElementById('start-time').addEventListener('change', calcTime);
+      document.getElementById('stop-time').addEventListener('change', calcTime);
+
+      function calcPrice() {
+        const cat = document.getElementById('payer-category').value, amountInput = document.getElementById('amount-input');
+        if (cat && priceMaster[cat] && totalMinutes > 0) amountInput.value = priceMaster[cat] * totalMinutes;
+        else if (totalMinutes === 0) amountInput.value = "";
+        updateValidationColors();
+      }
+
+      document.getElementById('wt-plus').addEventListener('click', () => { wtCount++; document.getElementById('wt-display').innerText = wtCount; });
+      document.getElementById('wt-minus').addEventListener('click', () => { if(wtCount > 0) wtCount--; document.getElementById('wt-display').innerText = wtCount; });
+
+      document.getElementById('submit-btn').addEventListener('click', () => {
+        const rawDate = document.getElementById('flight-date').value; 
+        let year = "", monthDay = "";
+        if (rawDate) { const parts = rawDate.split("-"); year = parts[0]; monthDay = `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`; }
+
+        const formData = {
+          year: year, monthDay: monthDay,
+          leftSeat: document.getElementById('left-seat').value, rightSeat: document.getElementById('right-seat').value,
+          purpose: document.getElementById('purpose').value, departure: document.getElementById('departure').value, arrival: document.getElementById('arrival').value,
+          startTime: document.getElementById('start-time').value, stopTime: document.getElementById('stop-time').value, timeString: flightTimeString, 
+          wtCount: wtCount, pic: document.getElementById('pic').value, payer: document.getElementById('payer').value,
+          category: document.getElementById('payer-category').value, amount: document.getElementById('amount-input').value, memo: document.getElementById('memo').value
+        };
+
+        if (!rawDate || (!formData.leftSeat && !formData.rightSeat) || !formData.purpose || !formData.departure || !formData.arrival || !formData.startTime || !formData.stopTime || !formData.pic || !formData.payer || !formData.category || formData.amount === "") {
+          updateValidationColors(); return alert("必須項目に入力漏れがあります。");
+        }
+
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true; btn.innerText = "送信中...";
+
+        callGas('saveFlightLog', { data: formData })
+          .then((res) => {
+            if (res.success) {
+              alert("保存しました！");
+              document.getElementById('departure').value = document.getElementById('arrival').value;
+              document.getElementById('arrival').value = ""; document.getElementById('start-time').value = ""; document.getElementById('stop-time').value = "";
+              document.getElementById('memo').value = ""; document.getElementById('amount-input').value = "";
+              wtCount = 0; document.getElementById('wt-display').innerText = "0"; totalMinutes = 0; flightTimeString = "0:00"; document.getElementById('flight-time-display').innerText = "0時間0分";
+            } else alert("エラー: " + res.error);
+            btn.disabled = false; btn.innerText = "ログを送信する"; updateValidationColors(); 
+          })
+          .catch((err) => { alert("保存通信エラー: " + err.message); btn.disabled = false; btn.innerText = "ログを送信する"; })
+      });
+    });
+  </script>
+</body>
+</html>
