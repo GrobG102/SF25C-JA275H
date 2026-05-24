@@ -131,7 +131,7 @@
   <datalist id="member-list"></datalist>
 
   <script>
-    // ▼▼▼ 【最重要】ここにあなたの設定値を直接貼り付けてください ▼▼▼
+    // ▼▼▼ 【最重要】ここにあなたの設定値を再度貼り付けてください ▼▼▼
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwrutfuWNIXWhtQXOxgG9EpQn0iRhITd2XstmEMxiuxydjA8K8PfKBM88Q_brPwXxe6BA/exec";
     const LIFF_ID = "2010179174-Zw9WEeTM";
     // ▲▲▲ 【最重要】ここまで ▲▲▲
@@ -139,7 +139,6 @@
     let wtCount = 0, priceMaster = {}, memberCategoryMap = {}, totalMinutes = 0, flightTimeString = "0:00"; 
     let loginUserName = "", loginUserCategory = "", lineProfile = { userId: "", displayName: "" };
 
-    // 作戦B：厨房(GAS)へ注文を送るための世界標準の通信関数
     function callGas(action, extraParams = {}) {
       const payload = { action: action, ...extraParams };
       return fetch(GAS_URL, {
@@ -153,7 +152,12 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById('flight-date').valueAsDate = new Date();
+      // ★修正箇所①：飛行日が「今日」になるように修正
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      document.getElementById('flight-date').value = `${yyyy}-${mm}-${dd}`;
       
       const sanitizeSpace = function(e) { this.value = this.value.replace(/[\s ]/g, ''); };
       document.getElementById('login-name').addEventListener('input', sanitizeSpace);
@@ -182,7 +186,6 @@
             lineProfile.userId = profile.userId;
             lineProfile.displayName = profile.displayName;
             
-            // google.script.runの代わりに、インターネット経由でGASへ注文
             callGas('checkAuth', { lineUserId: profile.userId })
               .then((authRes) => {
                 if (authRes.status === 'allowed') {
@@ -213,21 +216,26 @@
         updateValidationColors();
       });
 
+      // ★修正箇所②：ログインボタンの処理（確認中...を表示）
       document.getElementById('login-btn').addEventListener('click', () => {
         const name = document.getElementById('login-name').value;
         const pass = document.getElementById('login-pass').value;
         if(!name || !pass) { updateValidationColors(); return alert("お名前とパスワードを入力してください。"); }
         
-        document.getElementById('login-btn').disabled = true;
+        const btn = document.getElementById('login-btn');
+        btn.disabled = true;
+        btn.innerText = "ログイン確認中..."; 
+        
         callGas('loginWithPassword', { name: name, password: pass })
           .then((res) => {
+            btn.innerText = "ログインする"; 
             if(res.success) {
               loginUserName = res.name; loginUserCategory = res.category; initMainForm();
             } else {
-              alert(res.error); document.getElementById('login-btn').disabled = false;
+              alert(res.error); btn.disabled = false;
             }
           })
-          .catch(err => { alert("通信に失敗しました"); document.getElementById('login-btn').disabled = false; });
+          .catch(err => { alert("通信に失敗しました"); btn.disabled = false; btn.innerText = "ログインする"; });
       });
 
       document.getElementById('req-btn').addEventListener('click', () => {
@@ -235,14 +243,16 @@
         const cat = document.getElementById('req-category').value;
         if(!name || !cat) { updateValidationColors(); return alert("お名前と区分を選択してください。"); }
         
-        document.getElementById('req-btn').disabled = true;
+        const reqBtn = document.getElementById('req-btn');
+        reqBtn.disabled = true;
+        reqBtn.innerText = "申請中...";
         const reqData = { name: name, category: cat, lineName: lineProfile.displayName, lineUserId: lineProfile.userId };
         callGas('submitApplication', { data: reqData })
           .then((res) => {
             if(res.success) { showView('pending-view'); } 
-            else { alert(res.error); document.getElementById('req-btn').disabled = false; }
+            else { alert(res.error); reqBtn.disabled = false; reqBtn.innerText = "利用申請をする"; }
           })
-          .catch(() => { alert("申請通信に失敗しました"); document.getElementById('req-btn').disabled = false; });
+          .catch(() => { alert("申請通信に失敗しました"); reqBtn.disabled = false; reqBtn.innerText = "利用申請をする"; });
       });
 
       function initMainForm() {
@@ -252,6 +262,7 @@
           data.members.forEach(m => { memberCategoryMap[m.name] = m.category; memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); });
 
           const categorySelect = document.getElementById('payer-category');
+          // ★修正済み：198行目のタイポ
           data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
 
           const purposeList = document.getElementById('purpose-list');
