@@ -131,7 +131,7 @@
   <datalist id="member-list"></datalist>
 
   <script>
-    // ▼▼▼ 【最重要】ここにあなたの設定値を再度貼り付けてください ▼▼▼
+    // ▼▼▼ 【最重要】ここにあなたの設定値を貼り付けてください ▼▼▼
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwrutfuWNIXWhtQXOxgG9EpQn0iRhITd2XstmEMxiuxydjA8K8PfKBM88Q_brPwXxe6BA/exec";
     const LIFF_ID = "2010176015-89ujtMMp";
     // ▲▲▲ 【最重要】ここまで ▲▲▲
@@ -152,7 +152,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      // ★修正箇所①：飛行日が「今日」になるように修正
+      // 飛行日が正しく本日になるように修正
       const now = new Date();
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -216,7 +216,7 @@
         updateValidationColors();
       });
 
-      // ★修正箇所②：ログインボタンの処理（確認中...を表示）
+      // ログインボタンの処理（「確認中...」を表示）
       document.getElementById('login-btn').addEventListener('click', () => {
         const name = document.getElementById('login-name').value;
         const pass = document.getElementById('login-pass').value;
@@ -262,7 +262,6 @@
           data.members.forEach(m => { memberCategoryMap[m.name] = m.category; memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); });
 
           const categorySelect = document.getElementById('payer-category');
-          // ★修正済み：198行目のタイポ
           data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
 
           const purposeList = document.getElementById('purpose-list');
