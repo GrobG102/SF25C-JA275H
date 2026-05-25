@@ -44,7 +44,7 @@
 
   <div id="login-view" class="card hidden">
     <h2>ブラウザ版 ログイン</h2>
-    <p style="font-size: 16px; color: #666;">PCや通常のブラウザからご利用の場合は、お名前と共通パスワードを入力してください。</p>
+    <p style="font-size: 16px; color: #666;">PCや通常のブラウザからご利用の場合は、お名前 and 共通パスワードを入力してください。</p>
     <div style="background-color: #fff3e0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
       <span style="font-size: 14px; color: #e65100; font-weight: bold;">※クラブ未登録の方へ</span><br>
       <span style="font-size: 14px; color: #333;">初回は必ずスマートフォンの「LINE公式アカウント」から利用申請を行ってください。</span>
@@ -118,7 +118,7 @@
     </div>
 
     <label class="required">機長名 (PIC)</label><input list="member-list" id="pic" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="name">
-    <label class="required">振込予定者</label><input type="number" id="amount-input" class="req-check" placeholder="金額" style="font-weight: bold; color: #e65100; border: 2px solid #ff9800;">
+    <label class="required">振込予定者</label><input list="member-list" id="payer" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="name">
     <label class="required">搭乗者区分</label><select id="payer-category" class="req-check"><option value="">選択してください</option></select>
     
     <label>備考 <span class="sub-label">(空欄でもOK)</span></label><input type="text" id="memo" placeholder="特記事項">
@@ -152,7 +152,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      // 飛行日が正しく本日になるように修正
       const now = new Date();
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -216,7 +215,7 @@
         updateValidationColors();
       });
 
-      // ログインボタンの処理（「確認中...」を表示）
+      // ログインボタンの処理
       document.getElementById('login-btn').addEventListener('click', () => {
         const name = document.getElementById('login-name').value;
         const pass = document.getElementById('login-pass').value;
