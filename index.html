@@ -81,9 +81,9 @@
 
     <label class="required">左席 / 右席 <span class="sub-label">(どちらか一方でOK)</span></label>
     <div class="flex-row">
-      <input list="member-list" id="left-seat" class="half-input seat-check" placeholder="左席">
+      <input list="member-list" id="left-seat" class="half-input seat-check" placeholder="左席" inputmode="text" autocomplete="name">
       <button type="button" id="swap-btn" class="icon-btn">🔄</button>
-      <input list="member-list" id="right-seat" class="half-input seat-check" placeholder="右席">
+      <input list="member-list" id="right-seat" class="half-input seat-check" placeholder="右席" inputmode="text" autocomplete="name">
     </div>
 
     <label class="required">飛行目的</label>
@@ -117,8 +117,8 @@
       <button type="button" id="wt-plus" class="wt-btn" style="background-color: #ff9800; color: white;">＋</button>
     </div>
 
-    <label class="required">機長名 (PIC)</label><input list="member-list" id="pic" class="req-check" placeholder="名前を入力">
-    <label class="required">振込予定者</label><input list="member-list" id="payer" class="req-check" placeholder="名前を入力">
+    <label class="required">機長名 (PIC)</label><input list="member-list" id="pic" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="name">
+    <label class="required">振込予定者</label><input type="number" id="amount-input" class="req-check" placeholder="金額" style="font-weight: bold; color: #e65100; border: 2px solid #ff9800;">
     <label class="required">搭乗者区分</label><select id="payer-category" class="req-check"><option value="">選択してください</option></select>
     
     <label>備考 <span class="sub-label">(空欄でもOK)</span></label><input type="text" id="memo" placeholder="特記事項">
