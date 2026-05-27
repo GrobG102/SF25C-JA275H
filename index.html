@@ -161,10 +161,10 @@
   </div>
 
   <script>
-    // ▼▼▼ 【最重要】ここにあなたの設定値を貼り付けてください ▼▼▼
+    // ▼▼▼ ここにあなたの設定値を貼り付けてください ▼▼▼
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyh4gus4RHZ2HZWNJETAv6mHl7CyphKh2XxYplNq5crtmM0Msb46gY_7he1JofAEP3N_g/exec";
     const LIFF_ID = "2010176015-89ujtMMp";
-    // ▲▲▲ 【最重要】ここまで ▲▲▲
+    // ▲▲▲ ここまで ▲▲▲
 
     let wtCount = 0, priceMaster = {}, memberCategoryMap = {}, totalMinutes = 0, flightTimeString = "0:00"; 
     let loginUserName = "", loginUserCategory = "", lineProfile = { userId: "", displayName: "" };
@@ -221,6 +221,18 @@
       }
     }
 
+    // ★ 重複してエラーの原因になっていた関数を1つに統合しました
+    function calcPrice() {
+      const cat = document.getElementById('payer-category').value;
+      const amountInput = document.getElementById('amount-input');
+      if (cat && priceMaster[cat] && totalMinutes > 0) {
+        amountInput.value = priceMaster[cat] * totalMinutes;
+      } else if (totalMinutes === 0) {
+        amountInput.value = "";
+      }
+      updateValidationColors();
+    }
+
     function initMainForm() {
       callGas('getMasterData').then(function(data) {
         priceMaster = data.prices;
@@ -257,12 +269,13 @@
       });
     }
 
-    // ★ ここからメインの処理 ★
     document.addEventListener("DOMContentLoaded", () => {
       
-      // 1. まずは「すべてのボタンと入力欄」に命を吹き込む（絶対に死なないように先にやる）
       const now = new Date();
-      document.getElementById('flight-date').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      document.getElementById('flight-date').value = `${yyyy}-${mm}-${dd}`;
       
       const sanitizeSpace = function(e) { this.value = this.value.replace(/[\s　]/g, ''); };
       document.getElementById('login-name').addEventListener('input', sanitizeSpace);
@@ -337,13 +350,6 @@
         if (dep) { document.getElementById('arrival').value = dep; updateValidationColors(); }
       });
 
-      const calcPrice = () => {
-        const cat = document.getElementById('payer-category').value, amountInput = document.getElementById('amount-input');
-        if (cat && priceMaster[cat] && totalMinutes > 0) amountInput.value = priceMaster[cat] * totalMinutes;
-        else if (totalMinutes === 0) amountInput.value = "";
-        updateValidationColors();
-      };
-
       document.getElementById('payer').addEventListener('input', (e) => {
         if (memberCategoryMap[e.target.value]) { document.getElementById('payer-category').value = memberCategoryMap[e.target.value]; }
         calcPrice();
@@ -360,8 +366,4 @@
           totalMinutes = Math.floor((stopTime - startTime) / (1000 * 60));
           const h = Math.floor(totalMinutes / 60), m = totalMinutes % 60;
           document.getElementById('flight-time-display').innerText = `${h}時間${m}分`;
-          flightTimeString = `${h}:${m.toString().padStart(2, '0')}`;
-          calcPrice();
-        }
-      };
-  
+          flightTimeString = `${h}:${m.toString().padStart(2, '0')}
