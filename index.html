@@ -184,21 +184,90 @@
       });
     }
 
-    // 🌟 原点回帰：一番安定して動いていた起動イベント
+    function showView(viewId, foldContact = false) {
+      document.querySelectorAll('.card, #main-form-view, #loading-view').forEach(el => el.classList.add('hidden'));
+      document.getElementById(viewId).classList.remove('hidden');
+      
+      const body = document.getElementById('contact-body');
+      const arrow = document.getElementById('contact-arrow');
+      const titleText = document.getElementById('contact-title-text');
+      const targetText = document.getElementById('contact-target-text');
+
+      if (viewId === 'request-view') {
+        titleText.innerText = "✉ 管理者に問い合わせる"; targetText.classList.add('hidden'); 
+      } else {
+        titleText.innerText = "✉ 管理者へ連絡・不具合報告"; targetText.classList.remove('hidden');
+      }
+
+      if (foldContact) {
+        body.classList.add('hidden'); arrow.innerText = "▼"; isContactOpen = false;
+      } else {
+        body.classList.remove('hidden'); arrow.innerText = "▲"; isContactOpen = true;
+      }
+    }
+
+    function updateValidationColors() {
+      document.querySelectorAll('.req-check').forEach(el => {
+        if (!el.value) el.classList.add('empty-required');
+        else el.classList.remove('empty-required');
+      });
+      const left = document.getElementById('left-seat'), right = document.getElementById('right-seat');
+      if (document.getElementById('solo-flight-chk').checked) {
+        right.classList.remove('empty-required');
+        if (!left.value) left.classList.add('empty-required'); else left.classList.remove('empty-required');
+      } else {
+        if (!left.value && !right.value) { left.classList.add('empty-required'); right.classList.add('empty-required'); } 
+        else { left.classList.remove('empty-required'); right.classList.remove('empty-required'); }
+      }
+    }
+
+    function initMainForm() {
+      callGas('getMasterData').then(function(data) {
+        priceMaster = data.prices;
+        const memberList = document.getElementById('member-list');
+        data.members.forEach(m => { memberCategoryMap[m.name] = m.category; memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); });
+
+        const categorySelect = document.getElementById('payer-category');
+        data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
+
+        const purposeList = document.getElementById('purpose-list');
+        data.purposes.forEach(p => { purposeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
+
+        const placeList = document.getElementById('place-list');
+        data.places.forEach(p => { placeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
+
+        if (data.lastArrival) { document.getElementById('departure').value = data.lastArrival; }
+        if (loginUserName) {
+          document.getElementById('left-seat').value = loginUserName;
+          document.getElementById('pic').value = loginUserName;
+          document.getElementById('payer').value = loginUserName;
+          if (loginUserCategory) { document.getElementById('payer-category').value = loginUserCategory; }
+        }
+        
+        const targetTxt = document.getElementById('contact-target-text');
+        if (data.admins && data.admins.length > 0) { targetTxt.innerText = "送信先管理者: " + data.admins.join(', ') + " さん"; } 
+        else { targetTxt.innerText = "送信先管理者: クラブ管理者全員"; }
+
+        document.getElementById('user-welcome').innerText = `ログイン中: ${loginUserName} さん`;
+        showView('main-form-view', true);
+        updateValidationColors();
+      }).catch(() => {
+        alert("初期データの取得に失敗しました。画面をリロードしてください。");
+        showView('login-view', false);
+      });
+    }
+
+    // ★ ここからメインの処理 ★
     document.addEventListener("DOMContentLoaded", () => {
       
-      // 日付の初期セット
+      // 1. まずは「すべてのボタンと入力欄」に命を吹き込む（絶対に死なないように先にやる）
       const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const dd = String(now.getDate()).padStart(2, '0');
-      document.getElementById('flight-date').value = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('flight-date').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       
       const sanitizeSpace = function(e) { this.value = this.value.replace(/[\s　]/g, ''); };
       document.getElementById('login-name').addEventListener('input', sanitizeSpace);
       document.getElementById('req-name').addEventListener('input', sanitizeSpace);
 
-      // 単独飛行の連動
       document.getElementById('solo-flight-chk').addEventListener('change', (e) => {
         const rightSeat = document.getElementById('right-seat');
         if (e.target.checked) {
@@ -209,7 +278,6 @@
         updateValidationColors();
       });
 
-      // 日付アラート
       document.getElementById('flight-date').addEventListener('change', function() {
         const selectedDateStr = this.value;
         const alertBox = document.getElementById('date-alert-box');
@@ -232,142 +300,68 @@
         }
       });
 
-      function updateValidationColors() {
-        document.querySelectorAll('.req-check').forEach(el => {
-          if (!el.value) el.classList.add('empty-required');
-          else el.classList.remove('empty-required');
-        });
-        const left = document.getElementById('left-seat'), right = document.getElementById('right-seat');
-        if (document.getElementById('solo-flight-chk').checked) {
-          right.classList.remove('empty-required');
-          if (!left.value) left.classList.add('empty-required'); else left.classList.remove('empty-required');
-        } else {
-          if (!left.value && !right.value) { left.classList.add('empty-required'); right.classList.add('empty-required'); } 
-          else { left.classList.remove('empty-required'); right.classList.remove('empty-required'); }
-        }
-      }
-
       document.body.addEventListener('input', (e) => {
         if (e.target.classList.contains('req-check') || e.target.classList.contains('seat-check')) updateValidationColors();
       });
 
-      // 🌟 原点回帰：通常のLIFF初期化フロー
-      liff.init({ liffId: LIFF_ID.trim() }).then(() => {
-        if (liff.isInClient()) {
-          liff.getProfile().then(profile => {
-            lineProfile.userId = profile.userId;
-            lineProfile.displayName = profile.displayName;
-            
-            callGas('checkAuth', { lineUserId: profile.userId })
-              .then((authRes) => {
-                if (authRes.status === 'allowed') {
-                  loginUserName = authRes.name;
-                  loginUserCategory = authRes.category;
-                  initMainForm();
-                } else if (authRes.status === 'pending') {
-                  showView('pending-view', false);
-                } else {
-                  callGas('getMasterData').then((master) => {
-                    const reqSelect = document.getElementById('req-category');
-                    master.categories.forEach(cat => { reqSelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
-                    showView('request-view', false);
-                    updateValidationColors();
-                  });
-                }
-              })
-              .catch(() => { showView('login-view', false); updateValidationColors(); });
-          }).catch(() => { showView('login-view', false); updateValidationColors(); });
-        } else {
-          showView('login-view', false);
-          updateValidationColors();
-        }
-      }).catch(() => {
-        showView('login-view', false);
-        updateValidationColors();
-      });
-
-      document.getElementById('login-btn').addEventListener('click', () => {
-        const name = document.getElementById('login-name').value;
-        const pass = document.getElementById('login-pass').value;
-        if(!name || !pass) { updateValidationColors(); return alert("お名前とパスワードを入力してください。"); }
-        const btn = document.getElementById('login-btn'); btn.disabled = true; btn.innerText = "ログイン確認中..."; 
-        callGas('loginWithPassword', { name: name, password: pass })
-          .then((res) => {
-            btn.innerText = "ログインする"; 
-            if(res.success) { loginUserName = res.name; loginUserCategory = res.category; initMainForm(); } 
-            else { alert(res.error); btn.disabled = false; }
-          })
-          .catch(err => { alert("通信に失敗しました"); btn.disabled = false; btn.innerText = "ログインする"; });
-      });
-
-      document.getElementById('req-btn').addEventListener('click', () => {
-        const name = document.getElementById('req-name').value;
-        const cat = document.getElementById('req-category').value;
-        if(!name || !cat) { updateValidationColors(); return alert("お名前と区分を選択してください。"); }
-        const reqBtn = document.getElementById('req-btn'); reqBtn.disabled = true; reqBtn.innerText = "申請中...";
-        const reqData = { name: name, category: cat, lineName: lineProfile.displayName, lineUserId: lineProfile.userId };
-        callGas('submitApplication', { data: reqData })
-          .then((res) => {
-            if(res.success) { showView('pending-view', false); } 
-            else { alert(res.error); reqBtn.disabled = false; reqBtn.innerText = "利用申請をする"; }
-          })
-          .catch(() => { alert("申請通信に失敗しました"); reqBtn.disabled = false; reqBtn.innerText = "利用申請をする"; });
-      });
-
-      function initMainForm() {
-        callGas('getMasterData').then(function(data) {
-          priceMaster = data.prices;
-          const memberList = document.getElementById('member-list');
-          data.members.forEach(m => { memberCategoryMap[m.name] = m.category; memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); });
-
-          const categorySelect = document.getElementById('payer-category');
-          data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
-
-          const purposeList = document.getElementById('purpose-list');
-          data.purposes.forEach(p => { purposeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
-
-          const placeList = document.getElementById('place-list');
-          data.places.forEach(p => { placeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
-
-          if (data.lastArrival) { document.getElementById('departure').value = data.lastArrival; }
-          if (loginUserName) {
-            document.getElementById('left-seat').value = loginUserName;
-            document.getElementById('pic').value = loginUserName;
-            document.getElementById('payer').value = loginUserName;
-            if (loginUserCategory) { document.getElementById('payer-category').value = loginUserCategory; }
-          }
-          
-          const targetTxt = document.getElementById('contact-target-text');
-          if (data.admins && data.admins.length > 0) { targetTxt.innerText = "送信先管理者: " + data.admins.join(', ') + " さん"; } 
-          else { targetTxt.innerText = "送信先管理者: クラブ管理者全員"; }
-
-          document.getElementById('user-welcome').innerText = `ログイン中: ${loginUserName} さん`;
-          showView('main-form-view', true);
-          updateValidationColors();
-        }).catch(() => alert("初期データの取得に失敗しました"));
-      }
-
-      function showView(viewId, foldContact = false) {
-        document.querySelectorAll('.card, #main-form-view, #loading-view').forEach(el => el.classList.add('hidden'));
-        document.getElementById(viewId).classList.remove('hidden');
-        
+      document.getElementById('contact-toggle').addEventListener('click', () => {
+        if (document.getElementById('main-form-view').classList.contains('hidden') && !document.getElementById('loading-view').classList.contains('hidden')) return; 
         const body = document.getElementById('contact-body');
         const arrow = document.getElementById('contact-arrow');
-        const titleText = document.getElementById('contact-title-text');
-        const targetText = document.getElementById('contact-target-text');
+        if (isContactOpen) { body.classList.add('hidden'); arrow.innerText = "▼"; isContactOpen = false; } 
+        else { body.classList.remove('hidden'); arrow.innerText = "▲"; isContactOpen = true; }
+      });
 
-        if (viewId === 'request-view') {
-          titleText.innerText = "✉ 管理者に問い合わせる"; targetText.classList.add('hidden'); 
-        } else {
-          titleText.innerText = "✉ 管理者へ連絡・不具合報告"; targetText.classList.remove('hidden');
+      document.getElementById('contact-btn').addEventListener('click', () => {
+        const msg = document.getElementById('contact-msg').value.trim();
+        if (!msg) return alert("メッセージを入力してください。");
+        const btn = document.getElementById('contact-btn'); btn.disabled = true; btn.innerText = "送信中...";
+        const payload = { senderName: loginUserName || lineProfile.displayName || "未登録ユーザー", message: msg };
+        callGas('sendContactMessage', { data: payload })
+          .then((res) => {
+            if (res.success) { alert("管理者にメッセージを送信しました！"); document.getElementById('contact-msg').value = ""; } 
+            else { alert("エラー: " + res.error); }
+            btn.disabled = false; btn.innerText = "メッセージを送信する";
+          })
+          .catch((err) => { alert("通信エラーが発生しました"); btn.disabled = false; btn.innerText = "メッセージを送信する"; });
+      });
+
+      document.getElementById('swap-btn').addEventListener('click', () => {
+        if (document.getElementById('solo-flight-chk').checked) return;
+        const left = document.getElementById('left-seat'), right = document.getElementById('right-seat');
+        const temp = left.value; left.value = right.value; right.value = temp; updateValidationColors();
+      });
+
+      document.getElementById('lcl-btn').addEventListener('click', () => {
+        const dep = document.getElementById('departure').value;
+        if (dep) { document.getElementById('arrival').value = dep; updateValidationColors(); }
+      });
+
+      const calcPrice = () => {
+        const cat = document.getElementById('payer-category').value, amountInput = document.getElementById('amount-input');
+        if (cat && priceMaster[cat] && totalMinutes > 0) amountInput.value = priceMaster[cat] * totalMinutes;
+        else if (totalMinutes === 0) amountInput.value = "";
+        updateValidationColors();
+      };
+
+      document.getElementById('payer').addEventListener('input', (e) => {
+        if (memberCategoryMap[e.target.value]) { document.getElementById('payer-category').value = memberCategoryMap[e.target.value]; }
+        calcPrice();
+      });
+      document.getElementById('payer-category').addEventListener('change', calcPrice);
+
+      const calcTime = () => {
+        const start = document.getElementById('start-time').value, stop = document.getElementById('stop-time').value;
+        if(start && stop) {
+          const startTime = new Date(`1970-01-01T${start}:00`);
+          let stopTime = new Date(`1970-01-01T${stop}:00`);
+          if(stopTime < startTime) stopTime.setDate(stopTime.getDate() + 1);
+          
+          totalMinutes = Math.floor((stopTime - startTime) / (1000 * 60));
+          const h = Math.floor(totalMinutes / 60), m = totalMinutes % 60;
+          document.getElementById('flight-time-display').innerText = `${h}時間${m}分`;
+          flightTimeString = `${h}:${m.toString().padStart(2, '0')}`;
+          calcPrice();
         }
-
-        if (foldContact) {
-          body.classList.add('hidden'); arrow.innerText = "▼"; isContactOpen = false;
-        } else {
-          body.classList.remove('hidden'); arrow.innerText = "▲"; isContactOpen = true;
-        }
-      }
-
-      document.getElementById('contact-toggle').addEventListener('click', () => {
-       
+      };
+  
