@@ -6,30 +6,41 @@
   <title>フライトログ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  
   <style>
     body { font-family: sans-serif; font-size: 22px; padding: 15px; background-color: #f9f9f9; color: #333; margin: 0; }
     h2 { font-size: 24px; border-bottom: 3px solid #00B900; padding-bottom: 5px; margin-top: 10px; }
     label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; font-size: 20px; color: #555; }
     input, select, button, textarea { font-size: 22px; padding: 12px; width: 100%; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; background-color: #fff; transition: background-color 0.3s; }
+    
     .required::after { content: " *"; color: #ef5350; font-weight: bold; font-size: 20px; }
     .sub-label { font-size: 14px; color: #777; font-weight: normal; }
     .empty-required { background-color: #ffebee !important; border: 2px solid #ef5350 !important; }
+    
     .flex-row { display: flex; align-items: flex-start; gap: 10px; width: 100%; }
+    .flex-row > * { margin-bottom: 0; margin-top: 0; }
     .half-input { flex-grow: 1; width: 40%; min-width: 0; }
     .icon-btn { font-size: 28px; padding: 10px; flex-shrink: 0; width: auto; background: #e0e0e0; border: none; cursor: pointer; }
+    
     .label-with-btn { display: flex; justify-content: space-between; align-items: baseline; }
     .lcl-btn { font-size: 16px; padding: 6px 12px; width: auto; background-color: #2196F3; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
     .wt-container { display: flex; align-items: center; gap: 15px; }
     .wt-btn { font-size: 24px; width: 60px; background-color: #ddd; border: none; }
     .wt-display { font-size: 24px; font-weight: bold; width: 50px; text-align: center; }
+    
     .highlight-box { background-color: #e8f5e9; border: 2px solid #4caf50; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; font-weight: bold; }
     .btn-submit { background-color: #00B900; color: white; border: none; font-weight: bold; margin-top: 30px; }
+    .btn-submit:disabled { background-color: #9e9e9e; cursor: not-allowed; }
+    
     .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 20px; }
     .btn-blue { background-color: #2196F3; color: white; border: none; font-weight: bold; margin-top: 20px; }
     .hidden { display: none !important; }
     .alert-text { color: #ef5350; font-size: 16px; font-weight: bold; margin-top: 5px; }
+    
     .date-warning-box { background-color: #ffebee; border: 2px solid #ef5350; color: #c62828; padding: 10px; border-radius: 8px; margin-top: 5px; font-size: 16px; font-weight: bold; text-align: center;}
     .date-alert-bg { background-color: #ffebee !important; border: 2px solid #ef5350 !important; }
+
     .contact-container { background-color: #eceff1; border: 1px solid #b0bec5; padding: 15px; border-radius: 12px; margin-top: 40px; }
     .contact-title { font-size: 18px; font-weight: bold; color: #37474f; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
     .btn-contact-send { background-color: #607d8b; color: white; border: none; font-weight: bold; margin-top: 10px; font-size: 18px; padding: 8px; }
@@ -48,18 +59,23 @@
   <div id="login-view" class="card hidden">
     <h2>ブラウザ版 ログイン</h2>
     <p style="font-size: 16px; color: #666;">PCや通常のブラウザからご利用の場合は、お名前と共通パスワードを入力してください。</p>
+    <div style="background-color: #fff3e0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+      <span style="font-size: 14px; color: #e65100; font-weight: bold;">※クラブ未登録の方へ</span><br>
+      <span style="font-size: 14px; color: #333;">初回は必ずスマートフォンの「LINE公式アカウント」から利用申請を行ってください。</span>
+    </div>
     <label class="required">本名（スペースなし）</label>
-    <input type="text" id="login-name" class="req-check" placeholder="例：山田太郎" autocomplete="name">
+    <input type="text" id="login-name" class="req-check" placeholder="例：山田太郎" inputmode="text" autocomplete="name">
     <label class="required">共通パスワード</label>
-    <input type="password" id="login-pass" class="req-check" placeholder="共通パスワード">
+    <input type="password" id="login-pass" class="req-check" placeholder="クラブ共通パスワード">
     <button type="button" id="login-btn" class="btn-blue">ログインする</button>
   </div>
 
   <div id="request-view" class="card hidden">
     <h2>クラブ利用申請</h2>
-    <p style="font-size: 16px; color: #ef5350; font-weight: bold;">このLINEアカウントは未登録です。最初に利用申請を行ってください。</p>
+    <p style="font-size: 16px; color: #ef5350; font-weight: bold;">このLINEアカウントはまだ登録されていません。最初に利用申請を行ってください。</p>
     <label class="required">本名（スペースなし）</label>
-    <input type="text" id="req-name" class="req-check" placeholder="例：山田太郎" autocomplete="name">
+    <input type="text" id="req-name" class="req-check" placeholder="例：山田太郎" inputmode="text" autocomplete="name">
+    <div class="alert-text">※名字と名前の間のスペースは入れないでください。</div>
     <label class="required">搭乗者区分</label>
     <select id="req-category" class="req-check"><option value="">選択してください</option></select>
     <button type="button" id="req-btn" class="btn-submit">利用申請をする</button>
@@ -68,6 +84,7 @@
   <div id="pending-view" class="card hidden" style="text-align: center;">
     <h2 style="border-bottom: 3px solid #ff9800;">利用申請中</h2>
     <p style="font-weight: bold; margin-top: 20px;">現在、管理者の承認待ちです。</p>
+    <p style="font-size: 18px; color: #666;">承認が完了すると、自動的にフライトログ入力画面に切り替わります。しばらくお待ちください。</p>
   </div>
 
   <div id="main-form-view" class="hidden">
@@ -80,10 +97,11 @@
 
     <label class="required">左席 / 右席</label>
     <div class="flex-row">
-      <input list="member-list" id="left-seat" class="half-input seat-check" placeholder="左席" autocomplete="name">
+      <input list="member-list" id="left-seat" class="half-input seat-check" placeholder="左席" inputmode="text" autocomplete="name">
       <button type="button" id="swap-btn" class="icon-btn" style="margin-top: 2px;">🔄</button>
       <div style="flex-grow: 1; width: 40%; min-width: 0;">
-         <input list="member-list" id="right-seat" class="seat-check" style="width: 100%;" placeholder="右席" autocomplete="name">
+         <input list="member-list" id="right-seat" class="seat-check" style="width: 100%;" placeholder="右席" inputmode="text" autocomplete="name">
+         
          <div style="margin-top: 6px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
            <input type="checkbox" id="solo-flight-chk" style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
            <label for="solo-flight-chk" style="margin: 0; font-size: 16px; font-weight: normal; color: #666; cursor: pointer;">単独飛行（右席空）</label>
@@ -122,8 +140,8 @@
       <button type="button" id="wt-plus" class="wt-btn" style="background-color: #ff9800; color: white;">＋</button>
     </div>
 
-    <label class="required">機長名 (PIC)</label><input list="member-list" id="pic" class="req-check" placeholder="名前を入力">
-    <label class="required">振込予定者</label><input list="member-list" id="payer" class="req-check" placeholder="名前を入力">
+    <label class="required">機長名 (PIC)</label><input list="member-list" id="pic" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="name">
+    <label class="required">振込予定者</label><input list="member-list" id="payer" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="name">
     <label class="required">搭乗者区分</label><select id="payer-category" class="req-check"><option value="">選択してください</option></select>
     
     <label>備考 <span class="sub-label">(空欄でもOK)</span></label><input type="text" id="memo" placeholder="特記事項">
@@ -152,9 +170,17 @@
     const LIFF_ID = "2010176015-89ujtMMp";
     // ▲▲▲ 【設定】ここまで ▲▲▲
 
-    let wtCount = 0, priceMaster = {}, memberCategoryMap = {}, totalMinutes = 0, flightTimeString = "0:00"; 
-    let loginUserName = "", loginUserCategory = "", lineProfile = { userId: "", displayName: "" };
-    let isContactOpen = false, dateStatus = "valid", dateDiffText = "";
+    let wtCount = 0;
+    let priceMaster = {};
+    let memberCategoryMap = {};
+    let totalMinutes = 0;
+    let flightTimeString = "0:00"; 
+    let loginUserName = "";
+    let loginUserCategory = "";
+    let lineProfile = { userId: "", displayName: "" };
+    let isContactOpen = false;
+    let dateStatus = "valid";
+    let dateDiffText = "";
 
     function updateStatus(text) {
       document.getElementById('loading-status').innerText = text;
@@ -162,36 +188,79 @@
 
     function callGas(action, extraParams = {}) {
       const payload = { action: action, ...extraParams };
-      return fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) }).then(res => res.json());
+      return fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("通信エラーが発生しました");
+        return res.json();
+      });
     }
 
     function showView(viewId, foldContact = false) {
       document.querySelectorAll('.card, #main-form-view, #loading-view').forEach(el => el.classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
-      const body = document.getElementById('contact-body'), arrow = document.getElementById('contact-arrow'), titleText = document.getElementById('contact-title-text'), targetText = document.getElementById('contact-target-text');
-      if (viewId === 'request-view') { titleText.innerText = "✉ 管理者に問い合わせる"; targetText.classList.add('hidden'); } 
-      else { titleText.innerText = "✉ 管理者へ連絡・不具合報告"; targetText.classList.remove('hidden'); }
-      if (foldContact) { body.classList.add('hidden'); arrow.innerText = "▼"; isContactOpen = false; } 
-      else { body.classList.remove('hidden'); arrow.innerText = "▲"; isContactOpen = true; }
+      
+      const body = document.getElementById('contact-body');
+      const arrow = document.getElementById('contact-arrow');
+      const titleText = document.getElementById('contact-title-text');
+      const targetText = document.getElementById('contact-target-text');
+
+      if (viewId === 'request-view') {
+        titleText.innerText = "✉ 管理者に問い合わせる";
+        targetText.classList.add('hidden'); 
+      } else {
+        titleText.innerText = "✉ 管理者へ連絡・不具合報告";
+        targetText.classList.remove('hidden');
+      }
+
+      if (foldContact) {
+        body.classList.add('hidden');
+        arrow.innerText = "▼";
+        isContactOpen = false;
+      } else {
+        body.classList.remove('hidden');
+        arrow.innerText = "▲";
+        isContactOpen = true;
+      }
     }
 
     function updateValidationColors() {
       document.querySelectorAll('.req-check').forEach(el => {
-        if (!el.value) el.classList.add('empty-required'); else el.classList.remove('empty-required');
+        if (!el.value) {
+          el.classList.add('empty-required');
+        } else {
+          el.classList.remove('empty-required');
+        }
       });
-      const left = document.getElementById('left-seat'), right = document.getElementById('right-seat');
+      
+      const left = document.getElementById('left-seat');
+      const right = document.getElementById('right-seat');
+      
       if (document.getElementById('solo-flight-chk').checked) {
-        right.classList.remove('empty-required'); if (!left.value) left.classList.add('empty-required'); else left.classList.remove('empty-required');
+        right.classList.remove('empty-required');
+        if (!left.value) left.classList.add('empty-required');
+        else left.classList.remove('empty-required');
       } else {
-        if (!left.value && !right.value) { left.classList.add('empty-required'); right.classList.add('empty-required'); } 
-        else { left.classList.remove('empty-required'); right.classList.remove('empty-required'); }
+        if (!left.value && !right.value) { 
+          left.classList.add('empty-required'); 
+          right.classList.add('empty-required'); 
+        } else { 
+          left.classList.remove('empty-required'); 
+          right.classList.remove('empty-required'); 
+        }
       }
     }
 
     function calcPrice() {
-      const cat = document.getElementById('payer-category').value, amountInput = document.getElementById('amount-input');
-      if (cat && priceMaster[cat] && totalMinutes > 0) amountInput.value = priceMaster[cat] * totalMinutes;
-      else if (totalMinutes === 0) amountInput.value = "";
+      const cat = document.getElementById('payer-category').value;
+      const amountInput = document.getElementById('amount-input');
+      if (cat && priceMaster[cat] && totalMinutes > 0) {
+        amountInput.value = priceMaster[cat] * totalMinutes;
+      } else if (totalMinutes === 0) {
+        amountInput.value = "";
+      }
       updateValidationColors();
     }
 
@@ -200,159 +269,436 @@
       callGas('getMasterData').then(function(data) {
         priceMaster = data.prices;
         const memberList = document.getElementById('member-list');
-        data.members.forEach(m => { memberCategoryMap[m.name] = m.category; memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); });
-        data.categories.forEach(cat => { document.getElementById('payer-category').insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
-        data.purposes.forEach(p => { document.getElementById('purpose-list').insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
-        data.places.forEach(p => { document.getElementById('place-list').insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
+        data.members.forEach(m => { 
+          memberCategoryMap[m.name] = m.category; 
+          memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); 
+        });
 
-        if (data.lastArrival) { document.getElementById('departure').value = data.lastArrival; }
-        if (loginUserName) {
-          document.getElementById('left-seat').value = loginUserName; document.getElementById('pic').value = loginUserName; document.getElementById('payer').value = loginUserName;
-          if (loginUserCategory) { document.getElementById('payer-category').value = loginUserCategory; }
+        const categorySelect = document.getElementById('payer-category');
+        data.categories.forEach(cat => { 
+          categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); 
+        });
+
+        const purposeList = document.getElementById('purpose-list');
+        data.purposes.forEach(p => { 
+          purposeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); 
+        });
+
+        const placeList = document.getElementById('place-list');
+        data.places.forEach(p => { 
+          placeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); 
+        });
+
+        if (data.lastArrival) {
+          document.getElementById('departure').value = data.lastArrival;
         }
+        
+        if (loginUserName) {
+          document.getElementById('left-seat').value = loginUserName;
+          document.getElementById('pic').value = loginUserName;
+          document.getElementById('payer').value = loginUserName;
+          if (loginUserCategory) {
+            document.getElementById('payer-category').value = loginUserCategory;
+          }
+        }
+        
         const targetTxt = document.getElementById('contact-target-text');
-        targetTxt.innerText = (data.admins && data.admins.length > 0) ? "送信先管理者: " + data.admins.join(', ') + " さん" : "送信先管理者: クラブ管理者全員";
+        if (data.admins && data.admins.length > 0) { 
+          targetTxt.innerText = "送信先管理者: " + data.admins.join(', ') + " さん"; 
+        } else { 
+          targetTxt.innerText = "送信先管理者: クラブ管理者全員"; 
+        }
+
         document.getElementById('user-welcome').innerText = `ログイン中: ${loginUserName} さん`;
-        showView('main-form-view', true); updateValidationColors();
-      }).catch(() => { alert("初期データの取得に失敗しました。"); showView('login-view', false); });
+        showView('main-form-view', true);
+        updateValidationColors();
+      }).catch(() => {
+        alert("初期データの取得に失敗しました。画面をリロードしてください。");
+        showView('login-view', false);
+      });
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      // 1. 先にイベント群を登録（フリスト防止）
-      updateStatus("1/4 画面ボタンを準備中...");
+      
+      // 1. 画面の準備（ボタン等を先に活かす）
+      updateStatus("1/4 画面を準備中...");
+      
       const now = new Date();
-      document.getElementById('flight-date').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      document.getElementById('flight-date').value = `${yyyy}-${mm}-${dd}`;
       
       const sanitizeSpace = function(e) { this.value = this.value.replace(/[\s　]/g, ''); };
       document.getElementById('login-name').addEventListener('input', sanitizeSpace);
       document.getElementById('req-name').addEventListener('input', sanitizeSpace);
 
-      // ★ 右席の完全グレーアウト(背景色変更つき)の実装 ★
+      // 単独飛行のグレーアウト処理
       document.getElementById('solo-flight-chk').addEventListener('change', (e) => {
         const rightSeat = document.getElementById('right-seat');
         if (e.target.checked) {
-          rightSeat.value = ""; rightSeat.disabled = true; 
-          rightSeat.style.backgroundColor = "#e0e0e0"; rightSeat.placeholder = "（単独飛行のため選択不可）";
+          rightSeat.value = "";
+          rightSeat.disabled = true;
+          rightSeat.style.backgroundColor = "#e0e0e0";
+          rightSeat.placeholder = "（単独飛行のため入力不可）";
         } else {
-          rightSeat.disabled = false; 
-          rightSeat.style.backgroundColor = "#ffffff"; rightSeat.placeholder = "右席";
+          rightSeat.disabled = false;
+          rightSeat.style.backgroundColor = "#ffffff";
+          rightSeat.placeholder = "右席";
         }
         updateValidationColors();
       });
 
+      // 日付アラート処理
       document.getElementById('flight-date').addEventListener('change', function() {
-        const selectedDateStr = this.value, alertBox = document.getElementById('date-alert-box');
-        if (!selectedDateStr) { alertBox.classList.add('hidden'); this.classList.remove('date-alert-bg'); dateStatus = "valid"; return; }
-        const selected = new Date(selectedDateStr + "T00:00:00"), today = new Date();
-        today.setHours(0,0,0,0); selected.setHours(0,0,0,0);
-        const diffDays = Math.ceil((selected - today) / 86400000);
+        const selectedDateStr = this.value;
+        const alertBox = document.getElementById('date-alert-box');
+        
+        if (!selectedDateStr) { 
+          alertBox.classList.add('hidden'); 
+          this.classList.remove('date-alert-bg'); 
+          dateStatus = "valid"; 
+          return; 
+        }
+
+        const selected = new Date(selectedDateStr + "T00:00:00");
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        selected.setHours(0,0,0,0);
+        
+        const diffDays = Math.ceil((selected - today) / (1000 * 60 * 60 * 24));
 
         if (diffDays > 0) {
-          dateStatus = "future"; this.classList.add('date-alert-bg');
-          alertBox.innerText = "⚠️ 未来の日付です。ご確認ください。"; alertBox.classList.remove('hidden');
+          dateStatus = "future";
+          this.classList.add('date-alert-bg');
+          alertBox.innerText = "⚠️ 未来の日付です。ご確認ください。";
+          alertBox.classList.remove('hidden');
         } else if (diffDays < 0) {
-          dateStatus = "past"; this.classList.add('date-alert-bg');
+          dateStatus = "past";
+          this.classList.add('date-alert-bg');
           const absDays = Math.abs(diffDays);
           dateDiffText = (absDays >= 365) ? `${Math.floor(absDays / 365)}年${Math.floor((absDays % 365) / 30)}ヶ月${(absDays % 365) % 30}日前` : (absDays >= 30) ? `${Math.floor(absDays / 30)}ヶ月${absDays % 30}日前` : `${absDays}日前`;
-          alertBox.innerText = `💡 ${dateDiffText} の飛行ログですね？`; alertBox.classList.remove('hidden');
+          alertBox.innerText = `💡 ${dateDiffText} の飛行ログですね？`;
+          alertBox.classList.remove('hidden');
         } else {
-          dateStatus = "valid"; this.classList.remove('date-alert-bg'); alertBox.classList.add('hidden');
+          dateStatus = "valid";
+          this.classList.remove('date-alert-bg');
+          alertBox.classList.add('hidden');
         }
       });
 
-      document.body.addEventListener('input', (e) => { if (e.target.classList.contains('req-check') || e.target.classList.contains('seat-check')) updateValidationColors(); });
+      document.body.addEventListener('input', (e) => {
+        if (e.target.classList.contains('req-check') || e.target.classList.contains('seat-check')) {
+          updateValidationColors();
+        }
+      });
+
       document.getElementById('contact-toggle').addEventListener('click', () => {
         if (document.getElementById('main-form-view').classList.contains('hidden') && !document.getElementById('loading-view').classList.contains('hidden')) return; 
-        const body = document.getElementById('contact-body'), arrow = document.getElementById('contact-arrow');
-        if (isContactOpen) { body.classList.add('hidden'); arrow.innerText = "▼"; isContactOpen = false; } else { body.classList.remove('hidden'); arrow.innerText = "▲"; isContactOpen = true; }
+        const body = document.getElementById('contact-body');
+        const arrow = document.getElementById('contact-arrow');
+        if (isContactOpen) { 
+          body.classList.add('hidden'); arrow.innerText = "▼"; isContactOpen = false; 
+        } else { 
+          body.classList.remove('hidden'); arrow.innerText = "▲"; isContactOpen = true; 
+        }
       });
 
       document.getElementById('contact-btn').addEventListener('click', () => {
-        const msg = document.getElementById('contact-msg').value.trim(); if (!msg) return alert("メッセージを入力してください。");
-        const btn = document.getElementById('contact-btn'); btn.disabled = true; btn.innerText = "送信中...";
+        const msg = document.getElementById('contact-msg').value.trim();
+        if (!msg) return alert("メッセージを入力してください。");
+        const btn = document.getElementById('contact-btn');
+        btn.disabled = true;
+        btn.innerText = "送信中...";
+        
         callGas('sendContactMessage', { data: { senderName: loginUserName || lineProfile.displayName || "未登録", message: msg } })
-          .then((res) => { if (res.success) { alert("管理者に送信しました！"); document.getElementById('contact-msg').value = ""; } btn.disabled = false; btn.innerText = "メッセージを送信する"; });
+          .then((res) => {
+            if (res.success) {
+              alert("管理者にメッセージを送信しました！");
+              document.getElementById('contact-msg').value = "";
+            } else {
+              alert("エラー: " + res.error);
+            }
+            btn.disabled = false;
+            btn.innerText = "メッセージを送信する";
+          })
+          .catch((err) => {
+            alert("通信エラーが発生しました");
+            btn.disabled = false;
+            btn.innerText = "メッセージを送信する";
+          });
       });
 
       document.getElementById('swap-btn').addEventListener('click', () => {
         if (document.getElementById('solo-flight-chk').checked) return;
-        const left = document.getElementById('left-seat'), right = document.getElementById('right-seat'), temp = left.value; left.value = right.value; right.value = temp; updateValidationColors();
+        const left = document.getElementById('left-seat');
+        const right = document.getElementById('right-seat');
+        const temp = left.value;
+        left.value = right.value;
+        right.value = temp;
+        updateValidationColors();
       });
-      document.getElementById('lcl-btn').addEventListener('click', () => { const dep = document.getElementById('departure').value; if (dep) { document.getElementById('arrival').value = dep; updateValidationColors(); } });
-      document.getElementById('payer').addEventListener('input', (e) => { if (memberCategoryMap[e.target.value]) { document.getElementById('payer-category').value = memberCategoryMap[e.target.value]; } calcPrice(); });
+
+      document.getElementById('lcl-btn').addEventListener('click', () => {
+        const dep = document.getElementById('departure').value;
+        if (dep) {
+          document.getElementById('arrival').value = dep;
+          updateValidationColors();
+        }
+      });
+
+      document.getElementById('payer').addEventListener('input', (e) => {
+        if (memberCategoryMap[e.target.value]) {
+          document.getElementById('payer-category').value = memberCategoryMap[e.target.value];
+        }
+        calcPrice();
+      });
       document.getElementById('payer-category').addEventListener('change', calcPrice);
 
       const calcTime = () => {
-        const start = document.getElementById('start-time').value, stop = document.getElementById('stop-time').value;
+        const start = document.getElementById('start-time').value;
+        const stop = document.getElementById('stop-time').value;
         if(start && stop) {
-          const startTime = new Date(`1970-01-01T${start}:00`); let stopTime = new Date(`1970-01-01T${stop}:00`);
+          const startTime = new Date(`1970-01-01T${start}:00`);
+          let stopTime = new Date(`1970-01-01T${stop}:00`);
           if(stopTime < startTime) stopTime.setDate(stopTime.getDate() + 1);
+          
           totalMinutes = Math.floor((stopTime - startTime) / 60000);
-          document.getElementById('flight-time-display').innerText = `${Math.floor(totalMinutes / 60)}時間${totalMinutes % 60}分`;
-          flightTimeString = `${Math.floor(totalMinutes / 60)}:${(totalMinutes % 60).toString().padStart(2, '0')}`; calcPrice();
+          const h = Math.floor(totalMinutes / 60);
+          const m = totalMinutes % 60;
+          document.getElementById('flight-time-display').innerText = `${h}時間${m}分`;
+          flightTimeString = `${h}:${m.toString().padStart(2, '0')}`;
+          calcPrice();
         }
       };
-      document.getElementById('start-time').addEventListener('change', calcTime); document.getElementById('stop-time').addEventListener('change', calcTime);
-      document.getElementById('wt-plus').addEventListener('click', () => { wtCount++; document.getElementById('wt-display').innerText = wtCount; });
-      document.getElementById('wt-minus').addEventListener('click', () => { if(wtCount > 0) wtCount--; document.getElementById('wt-display').innerText = wtCount; });
+      
+      document.getElementById('start-time').addEventListener('change', calcTime);
+      document.getElementById('stop-time').addEventListener('change', calcTime);
+      
+      document.getElementById('wt-plus').addEventListener('click', () => {
+        wtCount++;
+        document.getElementById('wt-display').innerText = wtCount;
+      });
+      document.getElementById('wt-minus').addEventListener('click', () => {
+        if(wtCount > 0) wtCount--;
+        document.getElementById('wt-display').innerText = wtCount;
+      });
 
       document.getElementById('login-btn').addEventListener('click', () => {
-        const name = document.getElementById('login-name').value, pass = document.getElementById('login-pass').value;
-        if(!name || !pass) { updateValidationColors(); return alert("入力欄不足"); }
-        const btn = document.getElementById('login-btn'); btn.disabled = true; btn.innerText = "ログイン確認中..."; 
-        callGas('loginWithPassword', { name: name, password: pass }).then((res) => { btn.innerText = "ログインする"; if(res.success) { loginUserName = res.name; loginUserCategory = res.category; initMainForm(); } else { alert(res.error); btn.disabled = false; } });
+        const name = document.getElementById('login-name').value;
+        const pass = document.getElementById('login-pass').value;
+        if(!name || !pass) {
+          updateValidationColors();
+          return alert("お名前とパスワードを入力してください。");
+        }
+        
+        const btn = document.getElementById('login-btn');
+        btn.disabled = true;
+        btn.innerText = "ログイン確認中..."; 
+        
+        callGas('loginWithPassword', { name: name, password: pass })
+          .then((res) => {
+            btn.innerText = "ログインする"; 
+            if(res.success) {
+              loginUserName = res.name;
+              loginUserCategory = res.category;
+              initMainForm();
+            } else {
+              alert(res.error);
+              btn.disabled = false;
+            }
+          })
+          .catch(err => {
+            alert("通信に失敗しました");
+            btn.disabled = false;
+            btn.innerText = "ログインする";
+          });
       });
 
       document.getElementById('req-btn').addEventListener('click', () => {
-        const name = document.getElementById('req-name').value, cat = document.getElementById('req-category').value;
-        if(!name || !cat) { updateValidationColors(); return alert("入力不足"); }
-        const reqBtn = document.getElementById('req-btn'); reqBtn.disabled = true; reqBtn.innerText = "申請中...";
-        callGas('submitApplication', { data: { name: name, category: cat, lineName: lineProfile.displayName, lineUserId: lineProfile.userId } }).then((res) => { if(res.success) { showView('pending-view', false); } else { alert(res.error); reqBtn.disabled = false; } });
+        const name = document.getElementById('req-name').value;
+        const cat = document.getElementById('req-category').value;
+        if(!name || !cat) {
+          updateValidationColors();
+          return alert("お名前と区分を選択してください。");
+        }
+        
+        const reqBtn = document.getElementById('req-btn');
+        reqBtn.disabled = true;
+        reqBtn.innerText = "申請中...";
+        
+        const reqData = {
+          name: name,
+          category: cat,
+          lineName: lineProfile.displayName,
+          lineUserId: lineProfile.userId
+        };
+        
+        callGas('submitApplication', { data: reqData })
+          .then((res) => {
+            if(res.success) {
+              showView('pending-view', false);
+            } else {
+              alert(res.error);
+              reqBtn.disabled = false;
+              reqBtn.innerText = "利用申請をする";
+            }
+          })
+          .catch(() => {
+            alert("申請通信に失敗しました");
+            reqBtn.disabled = false;
+            reqBtn.innerText = "利用申請をする";
+          });
       });
 
       document.getElementById('submit-btn').addEventListener('click', () => {
-        if (dateStatus === "future") return alert("未来の日付です。");
-        if (dateStatus === "past" && !confirm(`※確認：${dateDiffText} のログですね？`)) return;
-        const rawDate = document.getElementById('flight-date').value; let year = "", monthDay = "";
-        if (rawDate) { const parts = rawDate.split("-"); year = parts[0]; monthDay = `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`; }
+        if (dateStatus === "future") {
+          alert("未来の日付です！！送信をブロックしました。");
+          return;
+        } else if (dateStatus === "past") {
+          const ok = confirm(`※確認：${dateDiffText} の飛行ログですね？よろしければOKを押してください。`);
+          if (!ok) return; 
+        }
+
+        const rawDate = document.getElementById('flight-date').value; 
+        let year = "", monthDay = "";
+        if (rawDate) {
+          const parts = rawDate.split("-");
+          year = parts[0];
+          monthDay = `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`;
+        }
+
         const isSolo = document.getElementById('solo-flight-chk').checked;
+        
         const formData = {
-          year: year, monthDay: monthDay, leftSeat: document.getElementById('left-seat').value, rightSeat: isSolo ? "-" : document.getElementById('right-seat').value,
-          purpose: document.getElementById('purpose').value, departure: document.getElementById('departure').value, arrival: document.getElementById('arrival').value,
-          startTime: document.getElementById('start-time').value, stopTime: document.getElementById('stop-time').value, timeString: flightTimeString, 
-          wtCount: wtCount, pic: document.getElementById('pic').value, payer: document.getElementById('payer').value, category: document.getElementById('payer-category').value, amount: document.getElementById('amount-input').value, memo: document.getElementById('memo').value
+          year: year,
+          monthDay: monthDay,
+          leftSeat: document.getElementById('left-seat').value,
+          rightSeat: isSolo ? "-" : document.getElementById('right-seat').value,
+          purpose: document.getElementById('purpose').value,
+          departure: document.getElementById('departure').value,
+          arrival: document.getElementById('arrival').value,
+          startTime: document.getElementById('start-time').value,
+          stopTime: document.getElementById('stop-time').value,
+          timeString: flightTimeString, 
+          wtCount: wtCount,
+          pic: document.getElementById('pic').value,
+          payer: document.getElementById('payer').value,
+          category: document.getElementById('payer-category').value,
+          amount: document.getElementById('amount-input').value,
+          memo: document.getElementById('memo').value
         };
-        if (!rawDate || (!formData.leftSeat && !formData.rightSeat) || !formData.purpose || !formData.departure || !formData.arrival || !formData.startTime || !formData.stopTime || !formData.pic || !formData.payer || !formData.category || formData.amount === "") { updateValidationColors(); return alert("入力漏れがあります"); }
-        const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.innerText = "送信中...";
-        callGas('saveFlightLog', { data: formData }).then((res) => { if (res.success) { alert("保存しました！"); location.reload(); } else { alert("エラー: " + res.error); btn.disabled = false; } });
+
+        if (!rawDate || (!formData.leftSeat && !formData.rightSeat) || !formData.purpose || !formData.departure || !formData.arrival || !formData.startTime || !formData.stopTime || !formData.pic || !formData.payer || !formData.category || formData.amount === "") {
+          updateValidationColors();
+          return alert("必須項目に入力漏れがあります。");
+        }
+
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.innerText = "送信中...";
+
+        callGas('saveFlightLog', { data: formData })
+          .then((res) => {
+            if (res.success) {
+              alert("保存しました！");
+              
+              // ★ PC用にリロードせず入力欄だけをスマートに空っぽに戻す ★
+              document.getElementById('departure').value = document.getElementById('arrival').value;
+              document.getElementById('arrival').value = ""; 
+              document.getElementById('start-time').value = ""; 
+              document.getElementById('stop-time').value = "";
+              document.getElementById('memo').value = ""; 
+              document.getElementById('amount-input').value = "";
+              
+              wtCount = 0; 
+              document.getElementById('wt-display').innerText = "0"; 
+              totalMinutes = 0; 
+              flightTimeString = "0:00"; 
+              document.getElementById('flight-time-display').innerText = "0時間0分";
+              
+              // 単独飛行の解除と右席の復活
+              document.getElementById('solo-flight-chk').checked = false;
+              const rightSeat = document.getElementById('right-seat');
+              rightSeat.disabled = false;
+              rightSeat.style.backgroundColor = "#ffffff";
+              rightSeat.placeholder = "右席";
+              
+              // 日付アラートのクリア
+              document.getElementById('flight-date').classList.remove('date-alert-bg');
+              document.getElementById('date-alert-box').classList.add('hidden');
+              dateStatus = "valid";
+
+              btn.disabled = false;
+              btn.innerText = "ログを送信する";
+              updateValidationColors();
+              
+            } else {
+              alert("エラー: " + res.error);
+              btn.disabled = false;
+              btn.innerText = "ログを送信する";
+            }
+          })
+          .catch((err) => {
+            alert("保存通信エラー: " + err.message);
+            btn.disabled = false;
+            btn.innerText = "ログを送信する";
+          });
       });
 
-      // 2. その後、LINEに安全に接続
+      // =====================================
+      // 2. 準備が完了したらLINEへ接続開始
+      // =====================================
       try {
-        if (typeof liff === 'undefined') { showView('login-view', false); return; }
-        updateStatus("2/4 LINE公式アカウントに接続中...");
+        if (typeof liff === 'undefined') {
+          showView('login-view', false);
+          return;
+        }
+
+        updateStatus("2/4 LINEに接続中...");
+        
         liff.init({ liffId: LIFF_ID.trim() }).then(() => {
           if (liff.isInClient()) {
             liff.getProfile().then(profile => {
-              lineProfile.userId = profile.userId; lineProfile.displayName = profile.displayName;
-              updateStatus("3/4 会員権限を照合中...");
-              // ★ LINE名の自動更新用として、最新の「lineName」も一緒にGASへ送る ★
+              lineProfile.userId = profile.userId;
+              lineProfile.displayName = profile.displayName;
+              
+              updateStatus("3/4 会員権限を確認中...");
+              
+              // ★ LINE名の自動更新機能に対応 ★
               callGas('checkAuth', { lineUserId: profile.userId, lineName: profile.displayName })
                 .then((authRes) => {
-                  if (authRes.status === 'allowed') { loginUserName = authRes.name; loginUserCategory = authRes.category; initMainForm(); } 
-                  else if (authRes.status === 'pending') { showView('pending-view', false); } 
-                  else {
+                  if (authRes.status === 'allowed') {
+                    loginUserName = authRes.name;
+                    loginUserCategory = authRes.category;
+                    initMainForm();
+                  } else if (authRes.status === 'pending') {
+                    showView('pending-view', false);
+                  } else {
                     callGas('getMasterData').then((master) => {
                       const reqSelect = document.getElementById('req-category');
-                      master.categories.forEach(cat => { reqSelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
-                      showView('request-view', false); updateValidationColors();
+                      master.categories.forEach(cat => { 
+                        reqSelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); 
+                      });
+                      showView('request-view', false);
+                      updateValidationColors();
                     });
                   }
-                }).catch(() => showView('login-view', false));
-            }).catch(() => showView('login-view', false));
-          } else { showView('login-view', false); updateValidationColors(); }
-        }).catch(() => showView('login-view', false));
-      } catch (e) { showView('login-view', false); }
+                })
+                .catch(() => { showView('login-view', false); updateValidationColors(); });
+            }).catch(() => { showView('login-view', false); updateValidationColors(); });
+          } else {
+            showView('login-view', false);
+            updateValidationColors();
+          }
+        }).catch(() => {
+          showView('login-view', false);
+          updateValidationColors();
+        });
+      } catch (e) {
+        showView('login-view', false);
+      }
+
     });
   </script>
 </body>
