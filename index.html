@@ -388,6 +388,7 @@
           const categorySelect = document.getElementById('payer-category');
           data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
 
+          // ★ 私のミスだったバグ箇所（修正済み）★
           const purposeList = document.getElementById('purpose-list');
           data.purposes.forEach(p => { purposeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
 
@@ -403,5 +404,4 @@
           }
           
           // 連絡ツール用に管理者のLINE名一覧をセット
-          const targetTxt = document.getElementById('contact-target-text');
-          if (
+          const targetTxt = document.getElementById('con
