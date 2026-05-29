@@ -130,6 +130,7 @@
       <span style="font-weight:bold;">〜</span>
       <input type="time" id="stop-time" class="half-input req-check">
     </div>
+    <div id="time-error-msg" class="alert-text hidden" style="text-align: center; margin-top: 8px;">⚠️ 停止時刻が発進時刻より前になっています！</div>
 
     <div class="highlight-box">飛行時間： <span id="flight-time-display">0時間0分</span></div>
 
@@ -173,6 +174,9 @@
     let wtCount = 0, priceMaster = {}, memberCategoryMap = {}, totalMinutes = 0, flightTimeString = "0:00"; 
     let loginUserName = "", loginUserCategory = "", lineProfile = { userId: "", displayName: "" };
     let isContactOpen = false, dateStatus = "valid", dateDiffText = "";
+    
+    // ★ 時刻エラー用のフラグを追加
+    let timeError = false;
 
     function updateStatus(text) {
       document.getElementById('loading-status').innerText = text;
@@ -212,7 +216,6 @@
       }
     }
 
-    // ★ 修正箇所：独立して空欄チェックを行うように直しました
     function updateValidationColors() {
       document.querySelectorAll('.req-check').forEach(el => {
         if (!el.value) el.classList.add('empty-required');
@@ -223,25 +226,29 @@
       const right = document.getElementById('right-seat');
       const isSolo = document.getElementById('solo-flight-chk').checked;
 
-      // 左席は絶対に必須
       if (!left.value) left.classList.add('empty-required');
       else left.classList.remove('empty-required');
 
-      // 単独飛行のときは右席の赤枠を外す。そうじゃないときは空欄なら赤枠をつける。
       if (isSolo) {
         right.classList.remove('empty-required');
       } else {
         if (!right.value) right.classList.add('empty-required');
         else right.classList.remove('empty-required');
       }
+
+      // ★ 時刻エラーが出ている時は強制的に赤枠をつける
+      if (timeError) {
+        document.getElementById('start-time').classList.add('empty-required');
+        document.getElementById('stop-time').classList.add('empty-required');
+      }
     }
 
     function calcPrice() {
       const cat = document.getElementById('payer-category').value;
       const amountInput = document.getElementById('amount-input');
-      if (cat && priceMaster[cat] && totalMinutes > 0) {
+      if (cat && priceMaster[cat] && totalMinutes > 0 && !timeError) {
         amountInput.value = priceMaster[cat] * totalMinutes;
-      } else if (totalMinutes === 0) {
+      } else if (totalMinutes === 0 || timeError) {
         amountInput.value = "";
       }
       updateValidationColors();
@@ -383,16 +390,40 @@
       });
       document.getElementById('payer-category').addEventListener('change', calcPrice);
 
+      // ★ 修正箇所：時刻矛盾のチェックとエラー表示
       const calcTime = () => {
-        const start = document.getElementById('start-time').value, stop = document.getElementById('stop-time').value;
+        const start = document.getElementById('start-time').value;
+        const stop = document.getElementById('stop-time').value;
+        const timeErrBox = document.getElementById('time-error-msg');
+        
         if(start && stop) {
-          const startTime = new Date(`1970-01-01T${start}:00`); let stopTime = new Date(`1970-01-01T${stop}:00`);
-          if(stopTime < startTime) stopTime.setDate(stopTime.getDate() + 1);
+          const startTime = new Date(`1970-01-01T${start}:00`);
+          const stopTime = new Date(`1970-01-01T${stop}:00`);
           
-          totalMinutes = Math.floor((stopTime - startTime) / 60000);
-          document.getElementById('flight-time-display').innerText = `${Math.floor(totalMinutes / 60)}時間${totalMinutes % 60}分`;
-          flightTimeString = `${Math.floor(totalMinutes / 60)}:${(totalMinutes % 60).toString().padStart(2, '0')}`;
-          calcPrice();
+          if(stopTime < startTime) {
+            // 時刻が矛盾している場合
+            timeError = true;
+            timeErrBox.classList.remove('hidden');
+            document.getElementById('flight-time-display').innerText = "エラー";
+            document.getElementById('flight-time-display').style.color = "#c62828";
+            totalMinutes = 0;
+            flightTimeString = "0:00";
+            calcPrice();
+          } else {
+            // 正常な場合
+            timeError = false;
+            timeErrBox.classList.add('hidden');
+            document.getElementById('flight-time-display').style.color = "#333";
+            
+            totalMinutes = Math.floor((stopTime - startTime) / 60000);
+            document.getElementById('flight-time-display').innerText = `${Math.floor(totalMinutes / 60)}時間${totalMinutes % 60}分`;
+            flightTimeString = `${Math.floor(totalMinutes / 60)}:${(totalMinutes % 60).toString().padStart(2, '0')}`;
+            calcPrice();
+          }
+        } else {
+          timeError = false;
+          timeErrBox.classList.add('hidden');
+          document.getElementById('flight-time-display').style.color = "#333";
         }
       };
       
@@ -435,6 +466,12 @@
           if (!confirm(`※確認：${dateDiffText} の飛行ログですね？よろしければOKを押してください。`)) return; 
         }
 
+        // ★ 修正箇所：時刻矛盾の最終ブロック
+        if (timeError) {
+          updateValidationColors();
+          return alert("停止時刻が発進時刻よりも早くなっています。正しい時刻を入力してください。");
+        }
+
         const rawDate = document.getElementById('flight-date').value; 
         let year = "", monthDay = "";
         if (rawDate) { const parts = rawDate.split("-"); year = parts[0]; monthDay = `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`; }
@@ -452,7 +489,6 @@
           category: document.getElementById('payer-category').value, amount: document.getElementById('amount-input').value, memo: document.getElementById('memo').value
         };
 
-        // ★ 修正箇所：送信時のブロック条件も厳密に直しました
         let seatError = false;
         if (!leftVal) seatError = true;
         if (!isSolo && !rightVal) seatError = true;
@@ -482,6 +518,8 @@
               document.getElementById('flight-date').classList.remove('date-alert-bg');
               document.getElementById('date-alert-box').classList.add('hidden');
               dateStatus = "valid";
+              timeError = false;
+              document.getElementById('time-error-msg').classList.add('hidden');
 
               btn.disabled = false; btn.innerText = "ログを送信する";
               updateValidationColors();
