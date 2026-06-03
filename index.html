@@ -44,6 +44,19 @@
     .contact-container { background-color: #eceff1; border: 1px solid #b0bec5; padding: 15px; border-radius: 12px; margin-top: 40px; }
     .contact-title { font-size: 18px; font-weight: bold; color: #37474f; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
     .btn-contact-send { background-color: #607d8b; color: white; border: none; font-weight: bold; margin-top: 10px; font-size: 18px; padding: 8px; }
+
+    /* ▼▼▼ 自作サジェスト（プルダウン）用の追加CSS ▼▼▼ */
+    .autocomplete-wrapper { position: relative; width: 100%; }
+    .autocomplete-list { 
+      position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 9999; 
+      background: white; border: 2px solid #00B900; border-radius: 8px; 
+      max-height: 220px; overflow-y: auto; box-shadow: 0 8px 16px rgba(0,0,0,0.2); 
+      margin: 0; padding: 0; list-style: none; 
+    }
+    .autocomplete-list li { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 20px; color: #333; }
+    .autocomplete-list li:last-child { border-bottom: none; }
+    .autocomplete-list li:active, .autocomplete-list li:hover { background-color: #e8f5e9; font-weight: bold; }
+    /* ▲▲▲ 追加CSS ここまで ▲▲▲ */
   </style>
 </head>
 <body>
@@ -97,11 +110,16 @@
 
     <label class="required">左席 / 右席</label>
     <div class="flex-row">
-      <input list="member-list" id="left-seat" class="half-input seat-check" placeholder="左席" inputmode="text" autocomplete="name">
+      <div class="autocomplete-wrapper half-input">
+        <input type="text" id="left-seat" class="seat-check" placeholder="左席" inputmode="text" autocomplete="off">
+        <ul class="autocomplete-list hidden"></ul>
+      </div>
       <button type="button" id="swap-btn" class="icon-btn" style="margin-top: 2px;">🔄</button>
       <div style="flex-grow: 1; width: 40%; min-width: 0;">
-         <input list="member-list" id="right-seat" class="seat-check" style="width: 100%;" placeholder="右席" inputmode="text" autocomplete="name">
-         
+         <div class="autocomplete-wrapper">
+           <input type="text" id="right-seat" class="seat-check" placeholder="右席" inputmode="text" autocomplete="off">
+           <ul class="autocomplete-list hidden"></ul>
+         </div>
          <div style="margin-top: 6px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
            <input type="checkbox" id="solo-flight-chk" style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
            <label for="solo-flight-chk" style="margin: 0; font-size: 16px; font-weight: normal; color: #666; cursor: pointer;">単独飛行（右席空）</label>
@@ -110,19 +128,26 @@
     </div>
 
     <label class="required" style="margin-top: 5px;">飛行目的</label>
-    <input list="purpose-list" id="purpose" class="req-check" placeholder="飛行目的を選択または入力">
-    <datalist id="purpose-list"></datalist>
+    <div class="autocomplete-wrapper">
+      <input type="text" id="purpose" class="req-check" placeholder="飛行目的を選択または入力" autocomplete="off">
+      <ul class="autocomplete-list hidden"></ul>
+    </div>
 
     <div class="label-with-btn">
       <label class="required">出発地 / 到着地</label>
       <button type="button" id="lcl-btn" class="lcl-btn">LCL (同地)</button>
     </div>
     <div class="flex-row" style="align-items: center;">
-      <input list="place-list" id="departure" class="half-input req-check" placeholder="出発地">
+      <div class="autocomplete-wrapper half-input">
+        <input type="text" id="departure" class="req-check" placeholder="出発地" autocomplete="off">
+        <ul class="autocomplete-list hidden"></ul>
+      </div>
       <span style="font-weight:bold;">→</span>
-      <input list="place-list" id="arrival" class="half-input req-check" placeholder="到着地">
+      <div class="autocomplete-wrapper half-input">
+        <input type="text" id="arrival" class="req-check" placeholder="到着地" autocomplete="off">
+        <ul class="autocomplete-list hidden"></ul>
+      </div>
     </div>
-    <datalist id="place-list"></datalist>
 
     <label class="required">発進時刻 / 停止時刻</label>
     <div class="flex-row" style="align-items: center;">
@@ -141,9 +166,20 @@
       <button type="button" id="wt-plus" class="wt-btn" style="background-color: #ff9800; color: white;">＋</button>
     </div>
 
-    <label class="required">機長名 (PIC)</label><input list="member-list" id="pic" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="name">
-    <label class="required">振込予定者</label><input list="member-list" id="payer" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="name">
-    <label class="required">搭乗者区分</label><select id="payer-category" class="req-check"><option value="">選択してください</option></select>
+    <label class="required">機長名 (PIC)</label>
+    <div class="autocomplete-wrapper">
+      <input type="text" id="pic" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="off">
+      <ul class="autocomplete-list hidden"></ul>
+    </div>
+    
+    <label class="required">振込予定者</label>
+    <div class="autocomplete-wrapper">
+      <input type="text" id="payer" class="req-check" placeholder="名前を入力" inputmode="text" autocomplete="off">
+      <ul class="autocomplete-list hidden"></ul>
+    </div>
+    
+    <label class="required">搭乗者区分</label>
+    <select id="payer-category" class="req-check"><option value="">選択してください</option></select>
     
     <label>備考 <span class="sub-label">(空欄でもOK)</span></label><input type="text" id="memo" placeholder="特記事項">
     <label class="required">フライト料金（円）</label>
@@ -151,7 +187,6 @@
 
     <button type="button" id="submit-btn" class="btn-submit">ログを送信する</button>
   </div>
-  <datalist id="member-list"></datalist>
 
   <div id="contact-box" class="contact-container">
     <div id="contact-toggle" class="contact-title">
@@ -174,9 +209,10 @@
     let wtCount = 0, priceMaster = {}, memberCategoryMap = {}, totalMinutes = 0, flightTimeString = "0:00"; 
     let loginUserName = "", loginUserCategory = "", lineProfile = { userId: "", displayName: "" };
     let isContactOpen = false, dateStatus = "valid", dateDiffText = "";
-    
-    // ★ 時刻エラー用のフラグを追加
     let timeError = false;
+
+    // ★ 自作サジェスト用のデータ保管用変数
+    let masterDataList = { members: [], purposes: [], places: [] };
 
     function updateStatus(text) {
       document.getElementById('loading-status').innerText = text;
@@ -236,7 +272,6 @@
         else right.classList.remove('empty-required');
       }
 
-      // ★ 時刻エラーが出ている時は強制的に赤枠をつける
       if (timeError) {
         document.getElementById('start-time').classList.add('empty-required');
         document.getElementById('stop-time').classList.add('empty-required');
@@ -254,24 +289,60 @@
       updateValidationColors();
     }
 
+    // ★ 自作サジェスト（ドロップダウン）を動かす関数
+    function attachAutocomplete(inputId, dataKey) {
+      const input = document.getElementById(inputId);
+      const wrapper = input.closest('.autocomplete-wrapper');
+      if (!wrapper) return;
+      const listElement = wrapper.querySelector('.autocomplete-list');
+
+      const renderList = (filterText) => {
+        listElement.innerHTML = '';
+        const dataArray = masterDataList[dataKey] || [];
+        let count = 0;
+        
+        dataArray.forEach(item => {
+          if (item.toLowerCase().includes(filterText.toLowerCase())) {
+            const li = document.createElement('li');
+            li.textContent = item;
+            
+            // mousedownを使うのが超重要！（タップ時にinputのblurより先に反応させるため）
+            li.addEventListener('mousedown', (e) => {
+              e.preventDefault(); 
+              input.value = item;
+              listElement.classList.add('hidden');
+              // 選択された瞬間にinputイベントを発火させ、裏側の計算（料金など）を走らせる
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            
+            listElement.appendChild(li);
+            count++;
+          }
+        });
+        
+        if (count > 0) listElement.classList.remove('hidden');
+        else listElement.classList.add('hidden');
+      };
+
+      input.addEventListener('focus', () => renderList(''));
+      input.addEventListener('input', (e) => renderList(e.target.value));
+      input.addEventListener('blur', () => listElement.classList.add('hidden'));
+    }
+
     function initMainForm() {
       updateStatus("4/4 アプリのデータを読み込み中...");
       callGas('getMasterData').then(function(data) {
         priceMaster = data.prices;
-        const memberList = document.getElementById('member-list');
-        data.members.forEach(m => { 
-          memberCategoryMap[m.name] = m.category; 
-          memberList.insertAdjacentHTML('beforeend', `<option value="${m.name}"></option>`); 
-        });
+        
+        // ★ 取得したデータを自作サジェスト用の変数にセット
+        masterDataList.members = data.members.map(m => m.name);
+        masterDataList.purposes = data.purposes;
+        masterDataList.places = data.places;
+
+        data.members.forEach(m => { memberCategoryMap[m.name] = m.category; });
 
         const categorySelect = document.getElementById('payer-category');
         data.categories.forEach(cat => { categorySelect.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`); });
-
-        const purposeList = document.getElementById('purpose-list');
-        data.purposes.forEach(p => { purposeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
-
-        const placeList = document.getElementById('place-list');
-        data.places.forEach(p => { placeList.insertAdjacentHTML('beforeend', `<option value="${p}"></option>`); });
 
         if (data.lastArrival) document.getElementById('departure').value = data.lastArrival;
         
@@ -287,6 +358,16 @@
         else { targetTxt.innerText = "送信先管理者: クラブ管理者全員"; }
 
         document.getElementById('user-welcome').innerText = `ログイン中: ${loginUserName} さん`;
+
+        // ★ 各入力欄にサジェスト機能を紐付ける
+        attachAutocomplete('left-seat', 'members');
+        attachAutocomplete('right-seat', 'members');
+        attachAutocomplete('purpose', 'purposes');
+        attachAutocomplete('departure', 'places');
+        attachAutocomplete('arrival', 'places');
+        attachAutocomplete('pic', 'members');
+        attachAutocomplete('payer', 'members');
+
         showView('main-form-view', true);
         updateValidationColors();
       }).catch(() => {
@@ -390,7 +471,6 @@
       });
       document.getElementById('payer-category').addEventListener('change', calcPrice);
 
-      // ★ 修正箇所：時刻矛盾のチェックとエラー表示
       const calcTime = () => {
         const start = document.getElementById('start-time').value;
         const stop = document.getElementById('stop-time').value;
@@ -401,7 +481,6 @@
           const stopTime = new Date(`1970-01-01T${stop}:00`);
           
           if(stopTime < startTime) {
-            // 時刻が矛盾している場合
             timeError = true;
             timeErrBox.classList.remove('hidden');
             document.getElementById('flight-time-display').innerText = "エラー";
@@ -410,7 +489,6 @@
             flightTimeString = "0:00";
             calcPrice();
           } else {
-            // 正常な場合
             timeError = false;
             timeErrBox.classList.add('hidden');
             document.getElementById('flight-time-display').style.color = "#333";
@@ -466,7 +544,6 @@
           if (!confirm(`※確認：${dateDiffText} の飛行ログですね？よろしければOKを押してください。`)) return; 
         }
 
-        // ★ 修正箇所：時刻矛盾の最終ブロック
         if (timeError) {
           updateValidationColors();
           return alert("停止時刻が発進時刻よりも早くなっています。正しい時刻を入力してください。");
